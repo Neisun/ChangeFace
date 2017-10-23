@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>
+        <%= title %>
+    </title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <h1>
+        <%= title %>
+    </h1>
+    <p>Welcome to
+        <%= title %>
+    </p>
+    <form id="uface">
+        <input type="file" name="files" id="upload">
+        <button type="button" onClick="uploadImg()">submit</button>
+    </form>
+    <div class="outer">
+        <img id="jz" src="/images/jz.png" style="display: none;">
+        <img id="target" src="/images/1.jpg" style="display: none;">
+        <canvas id="canvas" width="384" height="284"></canvas>
+    </div>
+    <script>
+        function uploadImg() {
+            var formData = new FormData();
+            // $('')[0]表示jq对象变成dom对象
+            formData.append("file", $("#upload")[0].files[0]);
+            console.log($('#upload')[0].files)
+            $.ajax({
+                type: 'POST',
+                url: '/file/uploading',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(res) {
+                    var json = JSON.parse(res);
+                    console.log(json);
+                    createFace(json);
+                    //从后端获取到人脸检测到结果后，调用createFace函数，进行图片合成  
+                }
+            });
+        };
+
+        function createFace(json) {
+            var jzimg = $('#jz')[0];
+            console.log(jzimg)
+            var img = $('#target')[0];
+            var canvas = $('#canvas')[0];
+            var ctx = canvas.getContext('2d');
+
+            var sx = json.result[0].location.left,
+                sy = json.result[0].location.top,
+                swidth = json.result[0].location.width,
+                sheight = json.result[0].location.height;
+            ctx.drawImage(img, sx, sy, swidth, sheight, 195, 65, 67, 60);
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.drawImage(jzimg, 0, 0);
+
+            //globalCompositeOperation = 'source-over';  这个是用来把抠出来到人脸，合成到军装里到关键设置，可以合成任意到图片，并保留图片到透明信息哦。
+            // 相当于ps里的图层叠加概念
+
+        };
+    </script>
+</body>
+
+</html>
